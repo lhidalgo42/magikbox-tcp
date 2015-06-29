@@ -1,0 +1,21 @@
+{
+  "name": "Neoguard-TCP",
+  "version": "1.0.0",
+  "description": "TCP Connection between HTTP SERVER and TCP IP",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.12.4",
+    "express": "^4.12.4",
+    "mysql":"^2.7.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "TCP-HTML"
+  ],
+  "author": "Leonardo Hidalgo",
+  "license": "MIT"
+}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Index</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.0.1/sweetalert.min.css">
+
+    <style>
+        body {
+            padding-top: 50px;
+            background-color: lightgray;
+        }
+
+        #form {
+            background-color: white;
+            -webkit-border-radius: 30px;
+            -moz-border-radius: 30px;
+            border-radius: 30px;
+            padding: 30px;;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="col-sm-8 col-xs-12">
+        <div id="form">
+            <form class="offser">
+                <div class="form-group">
+                    <label for="ip">IP</label>
+                    <input type="text" class="form-control disabled" id="ip" name="ip" placeholder="IP Address"
+                           disabled>
+                </div>
+                <div class="form-group">
+                    <label for="port">PORT</label>
+                    <input type="text" class="form-control disabled" id="port" name="port" placeholder="IP Address"
+                           disabled>
+                </div>
+                <input type="hidden" id="name" name="name">
+                <div class="form-group">
+                    <label for="data">DATA</label>
+                    <input type="text" class="form-control" id="data" placeholder="DATA" value="">
+                </div>
+                <button type="button" class="btn btn-success" id="send">Enviar</button>ttu
+            </form>
+        </div>
+    </div>
+    <div class="col-sm-4 col-xs-12">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Conexiones Activas <span class="badge pull-right" id="activeCount">0</span></h3>
+            </div>
+            <div class="panel-body">
+                <ul class="list-group" id="active"></ul>
+            </div>
+        </div>
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Ultimos Datos <span class="badge pull-right" id="dataCount">0</span></h3>
+            </div>
+            <div class="panel-body">
+                <ul class="list-group" id="dataList"></ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.0.1/sweetalert.min.js"></script>
+
+<script>
+
+    $("#send").click(function(){
+        if($("#name").val() != '') {
+            if($("#data").val() != '') {
+                $.ajax({
+                    url: "/send",
+                    type: "post",
+                    data: {
+                        data: $("#data").val(),
+                        name: $("#name").val()
+                    },
+                    success: function (data) {
+                        swal({
+                            title: "Success",
+                            text: data,
+                            timer: 4000,
+                            showConfirmButton: false,
+                            type: 'success'
+                        });
+                        $("#data").val('');
+                    }
+                });
+            }
+            else{
+                swal({
+                    title: "Estas Seguro?",
+                    text: "La variable DATA se Encuentra Vacia, Desea Enviarla de Todos modos",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Si, Enviar!",
+                    cancelButtonText: "No, Cancelar!",
+                    closeOnConfirm: false,
+                    closeOnCancel: false
+                }, function(isConfirm){
+                    if (isConfirm) {
+                        $.ajax({
+                            url: "/send",
+                            type: "post",
+                            data: {
+                                data: $("#data").val(),
+                                name: $("#name").val()
+                            },
+                            success: function (data) {
+                                swal({
+                                    title: "Success",
+                                    text: data,
+                                    timer: 4000,
+                                    showConfirmButton: false,
+                                    type: 'success'
+                                });
+                                $("#data").val('');
+                            }
+                        });
+                    }
+                    else {
+                        swal("Cancelado", "Se ha Cancelado el Envio de la Data", "info");
+                    }
+                });
+            }
+        }
+        else{
+            swal({
+                title: "Alerta",
+                text: 'Porfavor Seleccion EL Socket al que Desea Enviar',
+                timer: 3000,
+                showConfirmButton: false,
+                type: 'warning'
+            });
+        }
+
+    });
+
+    setInterval(function() {
+        $.ajax({
+            url: "/active",
+            type: "post",
+            success: function (data) {
+                var active = $("#active");
+                active.html('');
+                var count = data.length;
+                $("#activeCount").html(count);
+                for (var i = 0; i < count; i++) {
+                    active.append('<a href="#" class="list-group-item" ip="' + data[i].ip + '" port="' + data[i].port + '" name ="'+data[i].name+'"><span class="badge">' + data[i].timestamp.substring(0, 19) + '</span>'+data[i].name.substring(7, 26)+'</a>')
+                }
+                active.children().click(function () {
+                    $("#ip").val($(this).attr('ip'));
+                    $("#port").val($(this).attr('port'));
+                    $("#name").val($(this).attr('name'));
+                });
+            }
+        });
+        $.ajax({
+            url: "/data",
+            type: "post",
+            success: function (data) {
+                var dataList = $("#dataList");
+                var active = $("#active");
+                dataList.html('');
+                var count = data.length;
+                $("#dataCount").html(count);
+                for (var i = 0; i < count; i++) {
+                    dataList.append('<a href="#" class="list-group-item" ip="' + data[i].ip + '" port="' + data[i].port + '" name ="'+data[i].name+'"><span class="badge">' + data[i].timestamp.substring(0, 19) + '</span>'+data[i].data+'</a>')
+                }
+                dataList.children().click(function () {
+                    var count = active.size();
+                    for (var i = 0;i<count;i++){
+                        if($(active.children()[i]).attr('ip') == $(this).attr('ip') && $(active.children()[i]).attr('port') == $(this).attr('port'))
+                        {
+                            $("#ip").val($(this).attr('ip'));
+                            $("#port").val($(this).attr('port'));
+                            $("#name").val($(this).attr('name'));
+                        }
+                        else
+                        {
+                            swal({
+                                title: "Error",
+                                text: "El Socket que tratas de Ubicar no Esta Disponible.",
+                                timer: 2000,
+                                showConfirmButton: false,
+                                type: 'error'
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    },2000);
+</script>
+</body>
+</html>
