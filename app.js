@@ -10,7 +10,7 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json({limit: '150mb'}));
 app.use(bodyParser.urlencoded({limit: '150mb', extended: true}));
 
-var timeoutTime = 60*1*1000; // miliseconds
+var timeoutTime = 60 * 1 * 1000; // miliseconds
 var timeout = null;
 var interval = null;
 var connection = mysql.createConnection({
@@ -72,22 +72,21 @@ net.createServer(function (socket) {
 
 
     setTimeout(function () {
-        write('Connected',socket.name)
+        write('Connected', socket.name)
     }, 100);
 
     // Handle incoming messages from clients.
     socket.on('data', function (data) {
-        if (data != "" && data != " ")  {
-		var url = '/upload/frame/'+data; 
+        if (data != "" && data != " " && data != "\r") {
+            var url = '/upload/frame/' + data;
             var options = {
                 host: 'elabra.magikbox.cl',
                 port: 80,
                 path: url,
                 method: 'POST'
             };
-		console.log(url);
 
-            if(timeout == null)
+            if (timeout == null)
                 startTimeout(socket);
             else
                 restartTimeout(socket);
@@ -100,23 +99,23 @@ net.createServer(function (socket) {
                 });
             console.log(socket.name + " > " + data + "");
 
-            var req = http.request(options, function(res) {
-                if(res.statusCode == 200){
+            var req = http.request(options, function (res) {
+                if (res.statusCode == 200) {
                     res.setEncoding('utf8');
                     res.on('data', function (chunk) {
-                        console.log('BODY: ' + chunk);
+                        console.log(chunk);
                     });
                 }
             });
-		
-req.on('error', function(e) {
-  console.log('problem with request: ' + e.message);
-});
+
+            req.on('error', function (e) {
+                console.log('problem with request: ' + e.message);
+            });
 
 // write data to request body
-req.write('data\n');
-req.write('data\n');
-req.end();
+            req.write('data\n');
+            req.write('data\n');
+            req.end();
         }
     });
 
@@ -149,7 +148,8 @@ req.end();
             console.log('SEND :' + to + ' > ' + message)
         });
     }
-    function startTimeout(socket){
+
+    function startTimeout(socket) {
         timeout = setTimeout(function () {
             console.log('SEND :' + socket.name + ' > Desconnected');
             socket.end('Disconnect');
@@ -158,10 +158,10 @@ req.end();
             clients.splice(clients.indexOf(socket), 1);
             console.log(socket.name + " closed.");
         }, timeoutTime);
-        console.log('start '+socket.name)
+        console.log('start ' + socket.name)
     }
 
-    function restartTimeout(socket){
+    function restartTimeout(socket) {
         clearTimeout(timeout);
         startTimeout(socket);
     }
